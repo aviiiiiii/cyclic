@@ -67,7 +67,7 @@ const TollList =mongoose.model("TollList",tollListSchema);
 
 
 app.get("/getVehicleList",(req,res)=>{
-    VehicleList.find({}, null, {sort: {date: -1}},(err,vehicles)=>{
+    VehicleList.find({}, null, {sort: {dateFormated: -1}},(err,vehicles)=>{
         res.send(vehicles);
     })
 })
