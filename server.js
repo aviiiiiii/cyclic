@@ -83,7 +83,7 @@ app.get("/getVehicleListWithfilter/:value",(req,res)=>{
 
 app.get("/getVehicleListWithfilter2/:value",(req,res)=>{
     let filterValue=req.params.value;
-    VehicleList.find({type:{$regex:filterValue}},null, {sort: {date: -1}},(err,vehicles)=>{
+    VehicleList.find({toll:{$regex:filterValue}},null, {sort: {date: -1}},(err,vehicles)=>{
         res.send(vehicles);
     })
 })
