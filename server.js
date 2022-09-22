@@ -74,8 +74,7 @@ app.get("/getVehicleList",(req,res)=>{
 
 app.get("/getVehicleListWithfilter/:value",(req,res)=>{
     let filterValue=req.params.value;
-    console.log("hello");
-    VehicleList.find({number:{$regex: filterValue}},null, {sort: {dateFormated: -1}},(err,vehicles)=>{
+    VehicleList.find({number:{$regex: filterValue, $options:'i'}},null, {sort: {dateFormated: -1}},(err,vehicles)=>{
         res.send(vehicles);
     })
 })
@@ -90,7 +89,7 @@ app.get("/getVehicleListWithfilter2/:value",(req,res)=>{
 
 app.get("/getTollListWithfilter/:value",(req,res)=>{
     let filterValue=req.params.value;
-    TollList.find({name:{$regex:filterValue}},null, {sort: {name: 1}},(err,tolls)=>{
+    TollList.find({name:{$regex:filterValue, $options:'i'}},null, {sort: {name: 1}},(err,tolls)=>{
         res.send(tolls);
     })
 })
