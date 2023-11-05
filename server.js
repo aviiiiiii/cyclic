@@ -1,62 +1,54 @@
-const express = require('express');
-const cors =require('cors');
+const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
-const dotenv=require("dotenv");
-const e = require('express');
+const dotenv = require("dotenv");
+const e = require("express");
 
-const app =express();
+const app = express();
 app.use(cors());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 dotenv.config();
 
-const mongoURI=process.env.CONNECTION_URL;
-const PORT =process.env.PORT || 5000;
-mongoose.connect(mongoURI,{useNewUrlParser:true, useUnifiedTopology:true});
+const mongoURI = process.env.CONNECTION_URL;
+const PORT = process.env.PORT || 5000;
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
-app.get("/",(req,res)=>{
-    res.send("Working")
-})
+app.get("/", (req, res) => {
+  res.send("Working");
+});
 
+const vehicleListSchema = new mongoose.Schema({
+  type: String,
+  number: String,
+  date: String,
+  toll: String,
+  tariff: String,
+  dateFormated: Number,
+});
 
+const VehicleList = mongoose.model("VehicleList", vehicleListSchema);
 
-const vehicleListSchema=new mongoose.Schema(
-    {
-        type : String,
-        number : String,
-        date : String,
-        toll : String,
-        tariff : String,
-        dateFormated:Number
-    }
-);
+const tollListSchema = new mongoose.Schema({
+  name: String,
+  carSingle: Number,
+  carReturn: Number,
+  lcvSingle: Number,
+  lcvReturn: Number,
+  truckSingle: Number,
+  truckReturn: Number,
+  heavySingle: Number,
+  heavyReturn: Number,
+});
 
-const VehicleList =mongoose.model("VehicleList",vehicleListSchema);
-
-const tollListSchema=new mongoose.Schema(
-    {
-        name:String,
-        carSingle:Number,   
-        carReturn:Number,
-        lcvSingle:Number,
-        lcvReturn:Number,
-        truckSingle:Number,
-        truckReturn:Number,
-        heavySingle:Number,
-        heavyReturn:Number
-    }
-);
-
-const TollList =mongoose.model("TollList",tollListSchema);
-
-
+const TollList = mongoose.model("TollList", tollListSchema);
 
 // const sample={
 //     "type": "vehicleType",
 //     "number": "vehicleNumber",
 //     "date": "dateTime",
-//     "toll": "tollName", 
+//     "toll": "tollName",
 //     "tariff": "tariff",
 //     "dateFormated":"dateFormated"}
 
@@ -65,62 +57,231 @@ const TollList =mongoose.model("TollList",tollListSchema);
 //             else    console.log("Inserted");
 //         })
 
+app.get("/getVehicleList", (req, res) => {
+  VehicleList.find(
+    {},
+    null,
+    { sort: { dateFormated: -1 } },
+    (err, vehicles) => {
+      res.send(vehicles);
+    }
+  );
+});
 
-app.get("/getVehicleList",(req,res)=>{
-    VehicleList.find({}, null, {sort: {dateFormated: -1}},(err,vehicles)=>{
-        res.send(vehicles);
-    })
-})
+app.get("/getVehicleListWithfilter/:value", (req, res) => {
+  let filterValue = req.params.value;
+  VehicleList.find(
+    { number: { $regex: filterValue, $options: "i" } },
+    null,
+    { sort: { dateFormated: -1 } },
+    (err, vehicles) => {
+      res.send(vehicles);
+    }
+  );
+});
 
-app.get("/getVehicleListWithfilter/:value",(req,res)=>{
-    let filterValue=req.params.value;
-    VehicleList.find({number:{$regex: filterValue, $options:'i'}},null, {sort: {dateFormated: -1}},(err,vehicles)=>{
-        res.send(vehicles);
-    })
-})
+app.get("/getVehicleListWithfilter2/:value", (req, res) => {
+  let filterValue = req.params.value;
+  VehicleList.find(
+    { toll: { $regex: filterValue } },
+    null,
+    { sort: { dateFormated: -1 } },
+    (err, vehicles) => {
+      res.send(vehicles);
+    }
+  );
+});
 
+app.get("/getTollListWithfilter/:value", (req, res) => {
+  let filterValue = req.params.value;
+  TollList.find(
+    { name: { $regex: filterValue, $options: "i" } },
+    null,
+    { sort: { name: 1 } },
+    (err, tolls) => {
+      res.send(tolls);
+    }
+  );
+});
 
-app.get("/getVehicleListWithfilter2/:value",(req,res)=>{
-    let filterValue=req.params.value;
-    VehicleList.find({toll:{$regex:filterValue}},null, {sort: {dateFormated: -1}},(err,vehicles)=>{
-        res.send(vehicles);
-    })
-})
+app.post("/postVehicle", (req, res) => {
+  VehicleList.insertMany([req.body], (err) => {
+    if (err) console.log(err);
+    else console.log("inserted");
+  });
+});
 
-app.get("/getTollListWithfilter/:value",(req,res)=>{
-    let filterValue=req.params.value;
-    TollList.find({name:{$regex:filterValue, $options:'i'}},null, {sort: {name: 1}},(err,tolls)=>{
-        res.send(tolls);
-    })
-})
+app.get("/getTollList", (req, res) => {
+  TollList.find({}, null, { sort: { name: 1 } }, (err, tolls) => {
+    res.send(tolls);
+  });
+});
 
-app.post("/postVehicle",(req,res)=>{
-    VehicleList.insertMany([req.body],(err)=>{
-        if(err) console.log(err);
-        else    console.log("inserted");
-    })
-})
+app.post("/postToll", (req, res) => {
+  TollList.insertMany([req.body], (err) => {
+    if (err) console.log(err);
+    else console.log("inserted");
+  });
+});
 
-app.get("/getTollList",(req,res)=>{
-    TollList.find({},null,{sort: {name: 1}}, (err,tolls)=>{
-        res.send(tolls);
-    })
-})
+app.delete("/deleteToll/:delVal", (req, res) => {
+  const tollName = req.params.delVal;
 
-app.post("/postToll",(req,res)=>{
-    TollList.insertMany([req.body],(err)=>{
-        if(err) console.log(err);
-        else    console.log("inserted");
-    })
-})
+  TollList.findOneAndDelete({ name: tollName }, (err) => {
+    if (err) console.log(err);
+    else console.log("Toll Deleted");
+  });
+});
 
-app.delete("/deleteToll/:delVal", (req,res)=>{
-    const tollName=req.params.delVal;
+////////////////////////////////////////////////////////////////////
 
-    TollList.findOneAndDelete({name:tollName},(err)=>{
-        if(err) console.log(err)
-        else    console.log("Toll Deleted")
-    })
-})
+const transactionSchema = new mongoose.Schema({
+  user: String,
+  type: String,
+  amount: String,
+  description: String,
+  date: String,
+  id: Number,
+});
 
-app.listen(PORT, ()=>{console.log("Server started ")});
+const Transaction = mongoose.model("Transaction", transactionSchema);
+
+app.get("/getTransactions", (req, res) => {
+  Transaction.find(
+    {},
+    null,
+    { sort: { date: -1 } },
+    function (err, transactions) {
+      res.send(transactions);
+    }
+  );
+});
+
+app.post("/postTransaction", (req, res) => {
+  // console.log(req.body);
+  Transaction.insertMany([req.body], (err) => {
+    if (err) console.log(err);
+    else console.log("inserted");
+  });
+});
+
+app.get("/getYearlyIncome/:year", (req, res) => {
+  const year = req.params.year;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Income" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 4) === year) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ yearlyIncome: value1 });
+  });
+});
+
+app.get("/getYearlyExpense/:year", (req, res) => {
+  const year = req.params.year;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Expense" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 4) === year) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ yearlyExpense: value1 });
+  });
+});
+
+app.get("/getMonthlyIncome/:month", (req, res) => {
+  const month = req.params.month;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Income" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 7) === month) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ monthlyIncome: value1 });
+  });
+});
+
+app.get("/getMonthlyExpense/:month", (req, res) => {
+  const month = req.params.month;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Expense" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 7) === month) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ monthlyExpense: value1 });
+  });
+});
+
+app.get(
+  "/getTransactionsWithFilter/:user/:type/:dateFrom/:dateTo",
+  (req, res) => {
+    const user = req.params.user;
+    const type = req.params.type;
+    const dateFrom = req.params.dateFrom;
+    const dateTo = req.params.dateTo;
+    // console.log(user,type,dateFrom,dateTo);
+    Transaction.find(
+      {},
+      null,
+      { sort: { date: -1 } },
+      function (err, transactions) {
+        let result = transactions;
+        console.log(user);
+        if (user !== "null") {
+          result = result.filter((item) => {
+            return item.user === user;
+          });
+        }
+        if (type !== "null") {
+          result = result.filter((item) => {
+            return item.type === type;
+          });
+        }
+        if (dateFrom !== "null") {
+          result = result.filter((item) => {
+            return item.date >= dateFrom;
+          });
+        }
+        if (dateTo !== "null") {
+          result = result.filter((item) => {
+            return item.date <= dateTo;
+          });
+        }
+        // console.log(result);
+        res.send(result);
+      }
+    );
+  }
+);
+
+app.delete("/deleteTransaction/:id", (req, res) => {
+  const id = req.params.id;
+
+  Transaction.findByIdAndDelete(id, (err) => {
+    if (err) console.log(err);
+    else console.log("deleted");
+  });
+});
+
+//////////////////////////////////////////////////////////////////////
+
+app.listen(PORT, () => {
+  console.log("Server started ");
+});
