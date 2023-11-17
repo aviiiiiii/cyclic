@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const e = require("express");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 app.use(cors());
@@ -132,6 +133,241 @@ app.delete("/deleteToll/:delVal", (req, res) => {
     else console.log("Toll Deleted");
   });
 });
+
+////////////////////////////////////////////////////////////////////
+
+const transactionSchema = new mongoose.Schema({
+  user: String,
+  type: String,
+  amount: String,
+  description: String,
+  date: String,
+  id: Number,
+});
+
+const Transaction = mongoose.model("Transaction", transactionSchema);
+
+app.get("/getTransactions", (req, res) => {
+  Transaction.find(
+    {},
+    null,
+    { sort: { date: -1 } },
+    function (err, transactions) {
+      res.send(transactions);
+    }
+  );
+});
+
+app.post("/postTransaction", (req, res) => {
+  // console.log(req.body);
+  Transaction.insertMany([req.body], (err) => {
+    if (err) console.log(err);
+    else console.log("inserted");
+  });
+});
+
+app.get("/getYearlyIncome/:year", (req, res) => {
+  const year = req.params.year;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Income" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 4) === year) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ yearlyIncome: value1 });
+  });
+});
+
+app.get("/getYearlyExpense/:year", (req, res) => {
+  const year = req.params.year;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Expense" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 4) === year) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ yearlyExpense: value1 });
+  });
+});
+
+app.get("/getMonthlyIncome/:month", (req, res) => {
+  const month = req.params.month;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Income" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 7) === month) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ monthlyIncome: value1 });
+  });
+});
+
+app.get("/getMonthlyExpense/:month", (req, res) => {
+  const month = req.params.month;
+  let value = 0;
+  let value1 = "";
+  Transaction.find({ type: "Expense" }, (err, items) => {
+    items.forEach((item) => {
+      if (item.date.slice(0, 7) === month) {
+        value += Number(item.amount);
+        console.log(item);
+      }
+    });
+    value1 = new String(value);
+    res.send({ monthlyExpense: value1 });
+  });
+});
+
+app.get(
+  "/getTransactionsWithFilter/:user/:type/:dateFrom/:dateTo",
+  (req, res) => {
+    const user = req.params.user;
+    const type = req.params.type;
+    const dateFrom = req.params.dateFrom;
+    const dateTo = req.params.dateTo;
+    // console.log(user,type,dateFrom,dateTo);
+    Transaction.find(
+      {},
+      null,
+      { sort: { date: -1 } },
+      function (err, transactions) {
+        let result = transactions;
+        console.log(user);
+        if (user !== "null") {
+          result = result.filter((item) => {
+            return item.user === user;
+          });
+        }
+        if (type !== "null") {
+          result = result.filter((item) => {
+            return item.type === type;
+          });
+        }
+        if (dateFrom !== "null") {
+          result = result.filter((item) => {
+            return item.date >= dateFrom;
+          });
+        }
+        if (dateTo !== "null") {
+          result = result.filter((item) => {
+            return item.date <= dateTo;
+          });
+        }
+        // console.log(result);
+        res.send(result);
+      }
+    );
+  }
+);
+
+app.delete("/deleteTransaction/:id", (req, res) => {
+  const id = req.params.id;
+
+  Transaction.findByIdAndDelete(id, (err) => {
+    if (err) console.log(err);
+    else console.log("deleted");
+  });
+});
+
+//////////////////////////////////////////////////////////////////////
+
+const pendingTableSchema = new mongoose.Schema({
+  name: String,
+  uniqueId: String,
+});
+
+const PendingTable = mongoose.model("PendingTable", pendingTableSchema);
+
+const processedTableSchema = new mongoose.Schema({
+  name: String,
+  uniqueId: String,
+});
+
+const ProcessedTable = mongoose.model("ProcessedTable", processedTableSchema);
+
+app.get("/apiSendRequest/:input", (req, res) => {
+  let input = req.params.input;
+  if (input.length > 10) {
+    res.sendStatus(404);
+    return;
+  }
+  res.sendStatus(200);
+  let myuuid = uuidv4();
+
+  let inputJson = {
+    name: input,
+    uniqueId: myuuid,
+  };
+
+  PendingTable.insertMany([inputJson], (err) => {
+    if (err) console.log(err);
+    else console.log("inserted");
+  });
+});
+
+app.get("/processApiRequest/:processName/:processId", (req, res) => {
+  PendingTable.find(
+    { name: req.params.processName, uniqueId: req.params.processId },
+    (err, pendingItems) => {
+      if (pendingItems.length == 0) {
+        res.send("Not found");
+        console.log("Not found");
+        return;
+      } else {
+        PendingTable.findOneAndDelete(
+          { name: req.params.processName, uniqueId: req.params.processId },
+          (err) => {
+            if (err) console.log(err);
+            else console.log("item Deleted");
+          }
+        );
+        let inputJson = {
+          name: req.params.processName,
+          uniqueId: req.params.processId,
+        };
+        ProcessedTable.insertMany([inputJson], (err) => {
+          if (err) console.log(err);
+          else console.log("inserted");
+        });
+        res.send("Processed");
+      }
+    }
+  );
+});
+
+app.get("/checkprocessSatus/:processName", (req, res) => {
+  PendingTable.find({ name: req.params.processName }, (err, pendingItems) => {
+    if (pendingItems.length == 0) {
+      ProcessedTable.find(
+        { name: req.params.processName },
+        (err, processedItems) => {
+          if (processedItems.length == 1) {
+            res.send("Processed");
+          } else {
+            res.send("Not found");
+          }
+        }
+      );
+      return;
+    } else {
+      res.send("Still Pending");
+    }
+  });
+});
+
+//////////////////////////////////////////////////////////////////////
 
 app.listen(PORT, () => {
   console.log("Server started ");
