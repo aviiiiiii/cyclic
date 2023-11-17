@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const e = require("express");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 app.use(cors());
@@ -277,6 +278,92 @@ app.delete("/deleteTransaction/:id", (req, res) => {
   Transaction.findByIdAndDelete(id, (err) => {
     if (err) console.log(err);
     else console.log("deleted");
+  });
+});
+
+//////////////////////////////////////////////////////////////////////
+
+const pendingTableSchema = new mongoose.Schema({
+  name: String,
+  uniqueId: String,
+});
+
+const PendingTable = mongoose.model("PendingTable", pendingTableSchema);
+
+const processedTableSchema = new mongoose.Schema({
+  name: String,
+  uniqueId: String,
+});
+
+const ProcessedTable = mongoose.model("ProcessedTable", processedTableSchema);
+
+app.get("/apiSendRequest/:input", (req, res) => {
+  let input = req.params.input;
+  if (input.length > 10) {
+    res.sendStatus(404);
+    return;
+  }
+  res.sendStatus(200);
+  let myuuid = uuidv4();
+
+  let inputJson = {
+    name: input,
+    uniqueId: myuuid,
+  };
+
+  PendingTable.insertMany([inputJson], (err) => {
+    if (err) console.log(err);
+    else console.log("inserted");
+  });
+});
+
+app.get("/processApiRequest/:processName/:processId", (req, res) => {
+  PendingTable.find(
+    { name: req.params.processName, uniqueId: req.params.processId },
+    (err, pendingItems) => {
+      if (pendingItems.length == 0) {
+        res.send("Not found");
+        console.log("Not found");
+        return;
+      } else {
+        PendingTable.findOneAndDelete(
+          { name: req.params.processName, uniqueId: req.params.processId },
+          (err) => {
+            if (err) console.log(err);
+            else console.log("item Deleted");
+          }
+        );
+        let inputJson = {
+          name: req.params.processName,
+          uniqueId: req.params.processId,
+        };
+        ProcessedTable.insertMany([inputJson], (err) => {
+          if (err) console.log(err);
+          else console.log("inserted");
+        });
+        res.send("Processed");
+      }
+    }
+  );
+});
+
+app.get("/checkprocessSatus/:processName", (req, res) => {
+  PendingTable.find({ name: req.params.processName }, (err, pendingItems) => {
+    if (pendingItems.length == 0) {
+      ProcessedTable.find(
+        { name: req.params.processName },
+        (err, processedItems) => {
+          if (processedItems.length == 1) {
+            res.send("Processed");
+          } else {
+            res.send("Not found");
+          }
+        }
+      );
+      return;
+    } else {
+      res.send("Still Pending");
+    }
   });
 });
 
