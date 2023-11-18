@@ -301,9 +301,23 @@ app.get("/apiSendRequest/:input", (req, res) => {
   let input = req.params.input;
   if (input.length > 10) {
     res.sendStatus(404);
+    console.log("Length is less than 10");
     return;
   }
-  res.sendStatus(200);
+
+  // let found = false;
+  // PendingTable.find({ name: input }, (err, pendingItems) => {
+  //   if (pendingItems.length != 0) {
+  //     found = true;
+  //     console.log("Duplicate record");
+  //   }
+  // });
+
+  // if (found) {
+  //   res.sendStatus(404);
+  //   return;
+  // }
+
   let myuuid = uuidv4();
 
   let inputJson = {
@@ -315,6 +329,7 @@ app.get("/apiSendRequest/:input", (req, res) => {
     if (err) console.log(err);
     else console.log("inserted");
   });
+  res.sendStatus(200);
 });
 
 app.get("/processApiRequest/:processName/:processId", (req, res) => {
