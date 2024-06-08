@@ -56,7 +56,7 @@ const TollList = mongoose.model("TollList", tollListSchema);
 //         VehicleList.insertMany(sample,(err)=>{
 //             if(err) console.log(err);
 //             else    console.log("Inserted");
-//         })
+//         })Juzt checking
 
 app.get("/getVehicleList", (req, res) => {
   VehicleList.find(
