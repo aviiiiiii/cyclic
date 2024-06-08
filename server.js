@@ -5,8 +5,12 @@ const dotenv = require("dotenv");
 const e = require("express");
 const { v4: uuidv4 } = require("uuid");
 
+
+
+
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(cors({ origin: ['http://localhost:5000', 'https://aviiiiii.site'], credentials: true }))
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
