@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 // app.use(cors());
-app.use(cors({ origin: 'https://aviiiiii.site'}))
+app.use(cors({ origin: 'https://aviiiiii.online'}))
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
