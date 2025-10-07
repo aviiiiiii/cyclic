@@ -141,19 +141,21 @@ app.post("/postToll", async (req, res) => {
   });
 });
 
-app.delete("/deleteToll/:delVal", async (req, res) => {
-  const tollName = req.params.delVal;
 
-  await TollList.findOneAndDelete({ name: tollName }, (err) => {
-    if (err){
-       console.log(err);
-       res.status(500).json({ message: "Deleting Toll Failed"});
-    } 
-    else{
-       console.log("Toll Deleted");
-       res.status(201).json({ message: "Toll Deleted successfully"});
-    } 
-  });
+app.delete("/deleteToll/:delVal", async (req, res) => {
+  try {
+    const tollName = req.params.delVal;
+    const result = await TollList.findOneAndDelete({ name: tollName });
+
+    if (!result) {
+      return res.status(404).json({ message: "Toll not found" });
+    }
+
+    return res.status(200).json({ message: "Toll deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Deleting Toll Failed" });
+  }
 });
 
 ////////////////////////////////////////////////////////////////////
