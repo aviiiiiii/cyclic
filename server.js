@@ -128,10 +128,16 @@ app.get("/getTollList", (req, res) => {
   });
 });
 
-app.post("/postToll", (req, res) => {
-  TollList.insertMany([req.body], (err) => {
-    if (err) console.log(err);
-    else console.log("inserted");
+app.post("/postToll", async (req, res) => {
+  await TollList.insertMany([req.body], (err) => {
+    if (err){
+       console.log(err);
+       res.status(500).json({ message: "Adding Toll Failed"});
+    } 
+    else{
+       console.log("inserted");
+       res.status(201).json({ message: "Toll Added successfully"});
+    } 
   });
 });
 
