@@ -111,8 +111,14 @@ app.get("/getTollListWithfilter/:value", (req, res) => {
 
 app.post("/postVehicle", (req, res) => {
   VehicleList.insertMany([req.body], (err) => {
-    if (err) console.log(err);
-    else console.log("inserted");
+    if (err){
+      console.log(err);
+      res.status(500).json({ error: "Failed to insert vehicle" });
+    } 
+    else{
+      console.log("inserted");
+      res.status(201).json({ message: "Vehicle inserted successfully"});
+    } 
   });
 });
 
