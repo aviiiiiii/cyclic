@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 // app.use(cors());
-app.use(cors({ origin: '*'}));
+app.use(cors({ origin: '*' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -18,7 +18,7 @@ dotenv.config();
 
 const mongoURI = process.env.CONNECTION_URL;
 const PORT = process.env.PORT || 5000;
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true, autoIndex: true });
 
 app.get("/", (req, res) => {
   res.send("Working");
@@ -36,7 +36,10 @@ const vehicleListSchema = new mongoose.Schema({
 const VehicleList = mongoose.model("VehicleList", vehicleListSchema);
 
 const tollListSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    unique: true
+  },
   carSingle: Number,
   carReturn: Number,
   lcvSingle: Number,
@@ -47,7 +50,10 @@ const tollListSchema = new mongoose.Schema({
   heavyReturn: Number,
 });
 
+
+
 const TollList = mongoose.model("TollList", tollListSchema);
+
 
 // const sample={
 //     "type": "vehicleType",
@@ -112,20 +118,20 @@ app.get("/getTollListWithfilter/:value", (req, res) => {
 app.post("/postVehicle", async (req, res) => {
 
   let body = req.body;
-  if(body=={} || body.type==undefined || body.number==undefined || body.date==undefined || body.toll==undefined || body.tariff==undefined || body.dateFormated==undefined){
+  if (body == {} || body.type == undefined || body.number == undefined || body.date == undefined || body.toll == undefined || body.tariff == undefined || body.dateFormated == undefined) {
     res.status(400).json({ error: "Failed to insert vehicle" });
     return;
   }
 
   await VehicleList.insertMany([req.body], (err) => {
-    if (err){
+    if (err) {
       console.log(err);
       res.status(500).json({ error: "Failed to insert vehicle" });
-    } 
-    else{
+    }
+    else {
       console.log("inserted");
-      res.status(201).json({ message: "Vehicle inserted successfully"});
-    } 
+      res.status(201).json({ message: "Vehicle inserted successfully" });
+    }
   });
 });
 
@@ -138,22 +144,24 @@ app.get("/getTollList", (req, res) => {
 app.post("/postToll", async (req, res) => {
 
   let body = req.body;
-  if(body=={} || body.name==undefined || body.carSingle==undefined || body.carReturn==undefined || body.lcvSingle==undefined || body.lcvReturn==undefined || body.truckSingle==undefined || body.truckReturn==undefined || body.heavySingle==undefined || body.heavyReturn==undefined){
+  if (body == {} || body.name == undefined || body.carSingle == undefined || body.carReturn == undefined || body.lcvSingle == undefined || body.lcvReturn == undefined || body.truckSingle == undefined || body.truckReturn == undefined || body.heavySingle == undefined || body.heavyReturn == undefined) {
     res.status(400).json({ error: "Failed to insert toll" });
     return;
   }
 
 
-  await TollList.insertMany([req.body], (err) => {
-    if (err){
-       console.log(err);
-       res.status(500).json({ message: "Adding Toll Failed"});
-    } 
-    else{
-       console.log("inserted");
-       res.status(201).json({ message: "Toll Added successfully"});
-    } 
-  });
+  try {
+    await TollList.insertMany([req.body]); // No callback here
+    res.status(201).json({ message: "Toll inserted successfully" });
+    console.log("Inserted")
+  } catch (err) {
+    if (err.code === 11000) {
+      res.status(400).json({ error: "Duplicate entry not allowed" });
+    } else {
+      console.error(err);
+      res.status(500).json({ error: "Failed to insert toll" });
+    }
+  }
 });
 
 
