@@ -159,7 +159,7 @@ app.post("/postToll", async (req, res) => {
       res.status(400).json({ error: "Duplicate entry not allowed" });
     } else {
       console.error(err);
-      res.status(500).json({ error: "Failed to insert toll" });
+      res.status(400).json({ error: "Failed to insert toll" });
     }
   }
 });
