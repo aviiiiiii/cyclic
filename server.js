@@ -110,6 +110,13 @@ app.get("/getTollListWithfilter/:value", (req, res) => {
 });
 
 app.post("/postVehicle", async (req, res) => {
+
+  let body = req.body;
+  if(body=={} || body.type==undefined || body.number==undefined || body.date==undefined || body.toll==undefined || body.tariff==undefined || body.dateFormated==undefined){
+    res.status(400).json({ error: "Failed to insert vehicle" });
+    return;
+  }
+
   await VehicleList.insertMany([req.body], (err) => {
     if (err){
       console.log(err);
@@ -129,6 +136,14 @@ app.get("/getTollList", (req, res) => {
 });
 
 app.post("/postToll", async (req, res) => {
+
+  let body = req.body;
+  if(body=={} || body.name==undefined || body.carSingle==undefined || body.carReturn==undefined || body.lcvSingle==undefined || body.lcvReturn==undefined || body.truckSingle==undefined || body.truckReturn==undefined || body.heavySingle==undefined || body.heavyReturn==undefined){
+    res.status(400).json({ error: "Failed to insert toll" });
+    return;
+  }
+
+
   await TollList.insertMany([req.body], (err) => {
     if (err){
        console.log(err);
