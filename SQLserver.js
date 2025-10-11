@@ -12,7 +12,7 @@ app.use(express.json());
 
 // ====================== CONFIG ======================
 const DSN_NAME = "tosca_demo";
-const DB_USER = "sa"; 
+const DB_USER = "sa";
 const DB_PASS = "Password@123";
 const PORT = 5050;
 
@@ -77,7 +77,7 @@ app.post("/postVehicle", async (req, res) => {
   const { type, number, date, toll, tariff, dateFormated } = req.body;
 
   if (!type || !number || !date || !toll || !tariff || !dateFormated) {
-    return res.status(400).json({ error: "Missing fields" });
+    return res.status(400).json({ error: "Failed to insert vehicle" });
   }
 
   try {
@@ -131,7 +131,7 @@ app.post("/postToll", async (req, res) => {
     b.heavySingle == null ||
     b.heavyReturn == null
   ) {
-    return res.status(400).json({ error: "Missing fields" });
+    return res.status(400).json({ error: "Failed to insert toll" });
   }
 
   try {
@@ -153,12 +153,18 @@ app.post("/postToll", async (req, res) => {
     );
     res.status(201).json({ message: "Toll inserted successfully" });
   } catch (err) {
-    if (err.message.includes("Violation of UNIQUE KEY")) {
+
+    const hasUniqueKeyViolation = err.odbcErrors?.some(e =>
+      e.message.includes("Violation of UNIQUE KEY")
+    );
+
+    if (hasUniqueKeyViolation) {
       res.status(400).json({ error: "Duplicate entry not allowed" });
     } else {
       console.error(err);
       res.status(500).json({ error: "Failed to insert toll" });
     }
+
   }
 });
 
