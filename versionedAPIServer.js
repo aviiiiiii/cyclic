@@ -5,6 +5,7 @@ const dotenv = require("dotenv");
 const xmlparser = require("express-xml-bodyparser");
 const js2xmlparser = require("js2xmlparser");
 const { js2xml } = require("xml-js");
+const bodyParser = require("body-parser");
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -251,9 +252,39 @@ app.post("/v4/postInfo_xml", (req, res) => {
 
 
 //POC
+app.use(bodyParser.text({ type: ["application/xml", "text/xml"] }));
 
-app.post("/services/:version/CampaignService.svc/api/AddOrUpdate", (req, res) => {
+app.post("/AdStore/services/:version/CampaignService.svc/api/AddOrUpdate", (req, res) => {
     console.log(req.body);
+    res.set("Content-Type", "application/xml");
+    let campaign = req.body.campaign;
+    if(campaign.accounttype==undefined){
+        res.status(400).send(`
+            <Error>
+                <Msg>Account Type is a Required Param</Msg>
+            </Error>`);
+            return;
+    }else if(campaign.agencyid==undefined){
+        res.status(400).send(`
+            <Error>
+                <Msg>Agency Id is a Required Param</Msg>
+            </Error>`);
+            return;
+    }else if(campaign.validfrom==undefined || campaign.validfrom=="null"){
+        res.status(400).send(`
+            <Error>
+                <Msg>Valid From is a Required Param</Msg>
+            </Error>`);
+            return;
+    }else if(campaign.validto==undefined || campaign.validto=="null"){
+        res.status(400).send(`
+            <Error>
+                <Msg>Valid To is a Required Param</Msg>
+            </Error>`);
+            return;
+    }
+
+
     let id = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;;
     try {
         const response = `
@@ -289,7 +320,7 @@ app.post("/services/:version/CampaignService.svc/api/AddOrUpdate", (req, res) =>
 });
 
 
-app.post("/services/:version/SubHeaderService.svc/api/AddOrUpdate", (req, res) => {
+app.post("/AdStore/services/:version/SubHeaderService.svc/api/AddOrUpdate", (req, res) => {
     console.log(req.body);
     let id = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;;
     try {
@@ -399,9 +430,9 @@ app.post("/services/:version/SubHeaderService.svc/api/AddOrUpdate", (req, res) =
 });
 
 
-app.post("/services/:version/PositionService.svc/api/AddOrUpdate", (req, res) => {
+app.post("/AdStore/services/:version/PositionService.svc/api/AddOrUpdate", (req, res) => {
     console.log(req.body);
-    let id = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;;
+    let id = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     try {
         const response = `
             <Position xmlns="urn:AdStore/Campaign/V20252" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
@@ -457,7 +488,7 @@ app.post("/services/:version/PositionService.svc/api/AddOrUpdate", (req, res) =>
     }
 });
 
-app.post("/services/:version/SubHeaderService.svc/api/Propose", (req, res) => {
+app.post("/AdStore/services/:version/SubHeaderService.svc/api/Propose", (req, res) => {
     let a = req.query.subHeaderId;
     console.log(a);
     try {   
@@ -467,7 +498,7 @@ app.post("/services/:version/SubHeaderService.svc/api/Propose", (req, res) => {
     }
 });
 
-app.post("/services/:version/SubHeaderService.svc/api/Confirm", (req, res) => {
+app.post("/AdStore/services/:version/SubHeaderService.svc/api/Confirm", (req, res) => {
     let a = req.query.subHeaderId;
     console.log(a);
     try {   
