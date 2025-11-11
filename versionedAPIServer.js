@@ -264,11 +264,17 @@ app.post("/AdStore/services/:version/CampaignService.svc/api/AddOrUpdate", (req,
                 <Msg>Account Type is a Required Param</Msg>
             </Error>`);
             return;
-    }else if(campaign.agencyid==undefined){
+    }else if(campaign.agencyid=="00000"){
         res.status(400).send(`
-            <Error>
-                <Msg>Agency Id is a Required Param</Msg>
-            </Error>`);
+            <ErrorMsg>
+                <Message>Invalid AgencyId</Message>
+            </ErrorMsg>`);
+            return;
+    }else if(campaign.advertiserid=="00000"){
+        res.status(400).send(`
+            <ErrorMsg>
+                <Message>Invalid AdvertiserId</Message>
+            </ErrorMsg>`);
             return;
     }else if(campaign.validfrom==undefined || campaign.validfrom=="null"){
         res.status(400).send(`
